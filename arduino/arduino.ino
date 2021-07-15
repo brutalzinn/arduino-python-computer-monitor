@@ -44,24 +44,26 @@ void loop()
       Serial.flush();
       return;
     }
-    if(!statusConnected){
-    String status = doc["status"];
-    if (status == "1") {
-      statusConnected = true;
-      Serial.println("1");
-    } else {
-      statusConnected = false;
-    }
+    if (!statusConnected) {
+      String status = doc["status"];
+      if (status == "1") {
+        statusConnected = true;
+        Serial.println("1");
+      } else {
+        statusConnected = false;
+      }
 
-   }
-     rowone = doc["rowone"].as<String>();
-   
-     rowtwo = doc["rowtwo"].as<String>();
+    }
+    rowone = doc["rowone"].as<String>();
+
+    rowtwo = doc["rowtwo"].as<String>();
   }
   lcd.setCursor(0, 0);
-  lcd.print(Scroll_LCD_Left(rowone));
+  // lcd.print(Scroll_LCD_Left(rowone));
+  lcd.print(rowone);
   lcd.setCursor(0, 1);
-  lcd.print(Scroll_LCD_Left(rowtwo));
+  lcd.print(rowtwo);
+  //lcd.print(Scroll_LCD_Left(rowtwo));
   //Serial.flush();
 
 
