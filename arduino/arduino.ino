@@ -1,10 +1,4 @@
-/*
-   Displays text sent over the serial port (e.g. from the Serial Monitor) on
-   an attached LCD.
-   YWROBOT
-  Compatible with the Arduino IDE 1.0
-  Library version:1.1
-*/
+
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <ArduinoJson.h>
@@ -42,24 +36,23 @@ void loop()
   //lcd.clear();
   if (Serial.available()) {
 
-    StaticJsonDocument<1024> doc;
+    StaticJsonDocument<300> doc;
 
 
-    DeserializationError err = deserializeJson(doc, Serial.read());
+    DeserializationError err = deserializeJson(doc, Serial);
     if (err) {
       Serial.flush();
       return;
     }
-    String status = doc["status"].as<String>();
+    if(!statusConnected){
+    String status = doc["status"];
     if (status == "1") {
       statusConnected = true;
       Serial.println("1");
     } else {
       statusConnected = false;
-      Serial.println("0");
     }
-   if(!statusConnected){
-    return;
+
    }
      rowone = doc["rowone"].as<String>();
    
@@ -69,8 +62,7 @@ void loop()
   lcd.print(Scroll_LCD_Left(rowone));
   lcd.setCursor(0, 1);
   lcd.print(Scroll_LCD_Left(rowtwo));
-  delay(1000);
-  Serial.flush();
+  //Serial.flush();
 
 
 }
