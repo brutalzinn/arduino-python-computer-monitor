@@ -40,12 +40,12 @@ void loop()
 {
 
   //lcd.clear();
-  while (Serial.available()) {
+  if (Serial.available()) {
 
     StaticJsonDocument<1024> doc;
 
 
-    DeserializationError err = deserializeJson(doc, Serial);
+    DeserializationError err = deserializeJson(doc, Serial.read());
     if (err) {
       Serial.flush();
       return;
@@ -56,7 +56,7 @@ void loop()
       Serial.println("1");
     } else {
       statusConnected = false;
-      // Serial.println("0");
+      Serial.println("0");
     }
    if(!statusConnected){
     return;
