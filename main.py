@@ -12,6 +12,8 @@ prevMode = 0
 mode = 0
 memoryActivate = False
 maxMem = 0
+memKey = ''
+gpuKey = ''
 gpuActivate = False
 
 Li = 16
@@ -23,6 +25,8 @@ with open("config.json") as jsonFile:
     jsonFile.close()
 
 maxMem = jsonObject['maxMem']
+memKey = jsonObject['memKey']
+gpuKey = jsonObject['gpuKey']
 print('maxmem',maxMem)
 
 while not connected:
@@ -66,8 +70,8 @@ def setModeGPU():
         mode = -3
         gpuActivate = False
 
-activate_mem(setModeMemory)
-activate_gpu(setModeGPU)
+activate_mem(setModeMemory,memKey)
+activate_gpu(setModeGPU,gpuKey)
 while handShakePort != None:
     def modeWriter():
         global mode, maxMem
