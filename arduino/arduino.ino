@@ -8,14 +8,16 @@ int Li          = 16;
 int Lii         = 0;
 int Ri          = -1;
 int Rii         = -1;
+int memInputIndicator = 7;
 boolean statusConnected = false;
 String rowone = "";
 String rowtwo = "";
-
+boolean maxMem = false;
 void setup()
 {
   lcd.init();                      // initialize the lcd
   lcd.backlight();
+  pinMode(memInputIndicator, OUTPUT);
   Serial.begin(9600);
 }
 String Scroll_LCD_Left(String StrDisplay) {
@@ -30,17 +32,28 @@ String Scroll_LCD_Left(String StrDisplay) {
   }
   return result;
 }
+void checkMaxMem() {
+  if (maxMem) {
+    Serial.println("maxMem TRUE");
+    digitalWrite(memInputIndicator, HIGH);
+  } else {
+    Serial.println("maxMem FALSE");
+    digitalWrite(memInputIndicator, LOW);
+  }
+}
 void loop()
 {
 
   //lcd.clear();
   if (Serial.available()) {
 
-    StaticJsonDocument<300> doc;
+    StaticJsonDocument<256> doc;
+    JsonObject root = doc.to<JsonObject>();
 
 
     DeserializationError err = deserializeJson(doc, Serial);
     if (err) {
+      Serial.println("ERRROR");
       Serial.flush();
       return;
     }
@@ -54,20 +67,30 @@ void loop()
       }
 
     }
-    rowone = doc["rowone"].as<String>();
 
-    rowtwo = doc["rowtwo"].as<String>();
+    bool hasRowOne = root.containsKey("rowone");
+    bool hasRowTwo = root.containsKey("rowtwo");
+    bool hasMaxMem = root.containsKey("maxmem");
+
+    if (hasRowOne) {
+      rowone = doc["rowone"].as<String>();
+    }
+    if (hasRowTwo) {
+      rowtwo = doc["rowtwo"].as<String>();
+    }
+    if (hasMaxMem) {
+      String maxMemTest = doc["maxmem"].as<String>();
+      if(maxMemTest == "1"){
+        maxMem = true;
+      }else{
+        maxMem = false;
+      }
+      checkMaxMem();
+    }
   }
   lcd.setCursor(0, 0);
-  // lcd.print(Scroll_LCD_Left(rowone));
   lcd.print(rowone);
   lcd.setCursor(0, 1);
   lcd.print(rowtwo);
-  //lcd.print(Scroll_LCD_Left(rowtwo));
-  //Serial.flush();
-
-
-}
-String ScrollTxt(String txt) {
-  return txt.substring(1, txt.length()) + txt.substring(0, 1);
+ 
 }

@@ -4,19 +4,26 @@ import serial
 import psutil
 import serial.tools.list_ports
 import GPUtil
+import json
 from hotkey import activate_gpu, activate_mem
 ports = serial.tools.list_ports.comports()
 handShakePort = None
 prevMode = 0
 mode = 0
 memoryActivate = False
+maxMem = 0
 gpuActivate = False
 
 Li = 16
 Lii = 0
 connected = False
 
+with open("config.json") as jsonFile:
+    jsonObject = json.load(jsonFile)
+    jsonFile.close()
 
+maxMem = jsonObject['maxMem']
+print('maxmem',maxMem)
 
 while not connected:
     for port, desc, hwid in sorted(ports):
@@ -63,9 +70,9 @@ activate_mem(setModeMemory)
 activate_gpu(setModeGPU)
 while handShakePort != None:
     def modeWriter():
-        global mode
-        print('mode writer called')
-        print('mode',mode)
+        global mode, maxMem
+        maxMemStatus = '1'
+
         def scrollText(text):
             global Li, Lii
             result = None
@@ -80,6 +87,10 @@ while handShakePort != None:
 
         mem = psutil.virtual_memory()
         memPercent = mem.percent
+        if memPercent > maxMem:
+            maxMemStatus = '1'
+        else:
+            maxMemStatus = '0'
         memTotal = mem.total /1024/1024/1024
         memUsed = mem.active /1024/1024/1024
         cpuPercent = psutil.cpu_percent()
@@ -94,13 +105,13 @@ while handShakePort != None:
         memInfo = f'MEM: {memPercent}% {round(memUsed,1)} GB de {round(memTotal,1)} GB'
         gpuInfo = f'GPU: {gpu_util}% {gpu_temp} C    '
         procInfo = f'CPU: {cpuPercent}% {cpuTemp} C GPU: {gpu_util}% {gpu_temp} C'
-        writerResult = '{"rowone":"'+memInfo+'","rowtwo":"'+procInfo+'"}\n'
+        writerResult = '{"rowone":"'+memInfo+'","rowtwo":"'+procInfo+'","maxmem":'+maxMemStatus+'}\n'
         if mode == -1:
-            writerResult = '{"rowone":"'+memInfo+'","rowtwo":"'+procInfo+'"}\n'
+            writerResult = '{"rowone":"'+memInfo+'","rowtwo":"'+procInfo+'","maxmem":'+maxMemStatus+'}\n'
         if mode == 1:
-            writerResult = '{"rowone":"'+scrollText(memInfo)+'","rowtwo":"'+procInfo+'"}\n'
+            writerResult = '{"rowone":"'+scrollText(memInfo)+'","rowtwo":"'+procInfo+'","maxmem":'+maxMemStatus+'}\n'
         if mode == 3:
-            writerResult = '{"rowone":"'+gpuInfo+'","rowtwo":"'+procInfo+'"}\n'
+            writerResult = '{"rowone":"'+gpuInfo+'","rowtwo":"'+procInfo+'","maxmem":'+maxMemStatus+'}\n'
         return writerResult
     #print('startig at port',handShakePort)
     ser = serial.Serial(handShakePort, 9600)
