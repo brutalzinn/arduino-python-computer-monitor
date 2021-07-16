@@ -1,0 +1,43 @@
+ Eclipse stuff
+.classpath
+.project
+.settings/
+
+# netbeans
+nbproject/
+nbactions.xml
+
+# we use maven!
+build.xml
+
+# maven
+target/
+dependency-reduced-pom.xml
+
+# vim
+.*.sw[a-p]
+
+# various other potential build files
+build/
+*.attach_pid*
+bin/
+dist/
+env/
+manifest.mf
+__pycache__
+# Mac filesystem dust
+.DS_Store
+
+# intellij
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# other files
+*.log*
+
+
+# delombok
+*/src/main/lombok
+/venv/

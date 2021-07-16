@@ -34,10 +34,8 @@ String Scroll_LCD_Left(String StrDisplay) {
 }
 void checkMaxMem() {
   if (maxMem) {
-    Serial.println("maxMem TRUE");
     digitalWrite(memInputIndicator, HIGH);
   } else {
-    Serial.println("maxMem FALSE");
     digitalWrite(memInputIndicator, LOW);
   }
 }

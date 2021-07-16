@@ -6,6 +6,11 @@ I dont pretend update this project.
 
 A small project that i made to manager my memory leak problem.
 
+# Installing
+
+1. Clone this repository
+2. pip install pipenv ( install pip env for easy package control )
+3. pipenv install ( download and install all libraries that this project uses )
 # Small customization
 
 At this moment, you can set a MaxMem limit and configure the hot keys. All this needs

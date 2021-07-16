@@ -73,10 +73,29 @@ def setModeGPU():
 activate_mem(setModeMemory,memKey)
 activate_gpu(setModeGPU,gpuKey)
 while handShakePort != None:
-    def modeWriter():
-        global mode, maxMem
+    maxMemStatus = '1'
+    mem = psutil.virtual_memory()
+    memPercent = mem.percent
+    if memPercent > maxMem:
         maxMemStatus = '1'
-
+    else:
+        maxMemStatus = '0'
+    memTotal = mem.total /1024/1024/1024
+    memUsed = mem.active /1024/1024/1024
+    cpuPercent = psutil.cpu_percent()
+    gpu = GPUtil.getGPUs()[0]
+    gpu_util = int(gpu.load * 100)
+    gpu_temp = int(gpu.temperature)
+    cpuTemp = 0
+    cpuTemps = psutil.sensors_temperatures()['coretemp']
+    for item in cpuTemps:
+         if 'Package' in item.label:
+             cpuTemp = item.current
+    memInfo = f'MEM: {memPercent}% {round(memUsed,1)}GB de {round(memTotal,1)}GB'
+    gpuInfo = f'GPU: {gpu_util}% {gpu_temp} C    '
+    procInfo = f'CPU: {cpuPercent}% {cpuTemp} C GPU: {gpu_util}% {gpu_temp} C'
+    def modeWriter():
+        global mode
         def scrollText(text):
             global Li, Lii
             result = None
@@ -88,38 +107,19 @@ while handShakePort != None:
                 Li = 16
                 Lii = 0
             return result
-
-        mem = psutil.virtual_memory()
-        memPercent = mem.percent
-        if memPercent > maxMem:
-            maxMemStatus = '1'
-        else:
-            maxMemStatus = '0'
-        memTotal = mem.total /1024/1024/1024
-        memUsed = mem.active /1024/1024/1024
-        cpuPercent = psutil.cpu_percent()
-        gpu = GPUtil.getGPUs()[0]
-        gpu_util = int(gpu.load * 100)
-        gpu_temp = int(gpu.temperature)
-        cpuTemp = 0
-        cpuTemps = psutil.sensors_temperatures()['coretemp']
-        for item in cpuTemps:
-            if 'Package' in item.label:
-                cpuTemp = item.current
-        memInfo = f'MEM: {memPercent}% {round(memUsed,1)} GB de {round(memTotal,1)} GB'
-        gpuInfo = f'GPU: {gpu_util}% {gpu_temp} C    '
-        procInfo = f'CPU: {cpuPercent}% {cpuTemp} C GPU: {gpu_util}% {gpu_temp} C'
-        writerResult = '{"rowone":"'+memInfo+'","rowtwo":"'+procInfo+'","maxmem":'+maxMemStatus+'}\n'
+        writerResult = {"rowone":f"{memInfo}","rowtwo":f"{procInfo}"}
         if mode == -1:
-            writerResult = '{"rowone":"'+memInfo+'","rowtwo":"'+procInfo+'","maxmem":'+maxMemStatus+'}\n'
+            writerResult = {"rowone":f"{memInfo}","rowtwo":f"{procInfo}"}
         if mode == 1:
-            writerResult = '{"rowone":"'+scrollText(memInfo)+'","rowtwo":"'+procInfo+'","maxmem":'+maxMemStatus+'}\n'
+            writerResult = {"rowone":f"{scrollText(memInfo)}","rowtwo":f"{procInfo}"}
         if mode == 3:
-            writerResult = '{"rowone":"'+gpuInfo+'","rowtwo":"'+procInfo+'","maxmem":'+maxMemStatus+'}\n'
+            writerResult = {"rowone":f"{gpuInfo}","rowtwo":f"{procInfo}"}
         return writerResult
     #print('startig at port',handShakePort)
     ser = serial.Serial(handShakePort, 9600)
-
-    ser.write((modeWriter()).encode('ascii'))
+    prepareWriter = modeWriter()
+    prepareWriter['maxmem'] = maxMemStatus
+    message = f'{prepareWriter}\n'
+    ser.write((message).encode('ascii'))
     sleep(1)
 
