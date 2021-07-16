@@ -8,7 +8,8 @@ A small project that i made to manager my memory leak problem.
 
 # Small customization
 
-At this moment, you can set a MaxMem limit.
+At this moment, you can set a MaxMem limit and configure the hot keys. All this needs
+be defined at config.json file
 When the memory exceeds the memory limit, arduino nano input 7 is set to HIGH.
 so.. you can set a buzzer, or a led to gives you a physical feedback.
 
