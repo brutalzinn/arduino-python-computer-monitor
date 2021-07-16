@@ -4,10 +4,13 @@ import serial
 import psutil
 import serial.tools.list_ports
 import GPUtil
-from hotkey import activate_mem
+from hotkey import activate_gpu, activate_mem
 ports = serial.tools.list_ports.comports()
 handShakePort = None
+prevMode = 0
 mode = 0
+memoryActivate = False
+gpuActivate = False
 
 Li = 16
 Lii = 0
@@ -37,12 +40,27 @@ while not connected:
             except:
                 pass
 
-def setModeValue():
-    global mode
-    mode = 1
+def setModeMemory():
+    global mode, prevMode, memoryActivate
+    if not memoryActivate:
+        prevMode = mode
+        mode = 1
+        memoryActivate = True
+    else:
+        mode = -1
+        memoryActivate = False
+def setModeGPU():
+    global mode, prevMode, gpuActivate
+    if not gpuActivate:
+        prevMode = mode
+        mode = 3
+        gpuActivate = True
+    else:
+        mode = -3
+        gpuActivate = False
 
-activate_mem(setModeValue)
-
+activate_mem(setModeMemory)
+activate_gpu(setModeGPU)
 while handShakePort != None:
     def modeWriter():
         global mode
@@ -74,10 +92,15 @@ while handShakePort != None:
             if 'Package' in item.label:
                 cpuTemp = item.current
         memInfo = f'MEM: {memPercent}% {round(memUsed,1)} GB de {round(memTotal,1)} GB'
+        gpuInfo = f'GPU: {gpu_util}% {gpu_temp} C    '
         procInfo = f'CPU: {cpuPercent}% {cpuTemp} C GPU: {gpu_util}% {gpu_temp} C'
         writerResult = '{"rowone":"'+memInfo+'","rowtwo":"'+procInfo+'"}\n'
+        if mode == -1:
+            writerResult = '{"rowone":"'+memInfo+'","rowtwo":"'+procInfo+'"}\n'
         if mode == 1:
             writerResult = '{"rowone":"'+scrollText(memInfo)+'","rowtwo":"'+procInfo+'"}\n'
+        if mode == 3:
+            writerResult = '{"rowone":"'+gpuInfo+'","rowtwo":"'+procInfo+'"}\n'
         return writerResult
     #print('startig at port',handShakePort)
     ser = serial.Serial(handShakePort, 9600)
