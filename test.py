@@ -1,11 +1,8 @@
-import psutil
-import GPUtil
-
-gpu = GPUtil.getGPUs()[0]
-gpu_util = int(gpu.load * 100)
-gpu_temp = int(gpu.temperature)
-#print(gpu_temp)
-cpuTemps = psutil.sensors_temperatures()['coretemp']
-for item in cpuTemps:
-    if 'Package' in item.label:
-        print(item.current)
+import serial
+from time import sleep
+ser = serial.Serial('COM6', 9600, timeout=0)
+while True:
+    
+    ser.write(b'{"status":"1"}')
+    reading = ser.read(ser.inWaiting()).decode('ascii')
+    print(reading)

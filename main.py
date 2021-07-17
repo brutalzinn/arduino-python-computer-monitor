@@ -2,6 +2,7 @@ from os import error
 from time import sleep
 import serial
 import psutil
+from serial.serialwin32 import Serial
 import serial.tools.list_ports
 import GPUtil
 import json
@@ -28,28 +29,30 @@ maxMem = jsonObject['maxMem']
 memKey = jsonObject['memKey']
 gpuKey = jsonObject['gpuKey']
 print('maxmem',maxMem)
-
+ports = serial.tools.list_ports.comports(include_links=False)
+ser = serial.Serial()
 while not connected:
-    for port, desc, hwid in sorted(ports):
-            print("{}: {} [{}]".format(port, desc, hwid))
+    for port in ports:
             try:
-                print('connecting...',port)
-                testHandShake = serial.Serial(port, 9600, timeout=1.0)
-                print('writing to arduino...')
-                testHandShake.write('{"status":"1"}\n'.encode('ascii'))
-                # print('trying to handshake..')
-                # print(testHandShake.readline())
-
-                response = testHandShake.read_until(b'1\n')
-                print(response)
-                if response == b"1\r\n":
-                    print('respondeu.. porta atribuida pelo handshake.', port)
+                if not ser.isOpen():
+                    ser = serial.Serial(
+                        port=port.device,
+                        baudrate=9600,
+                        timeout=1
+                    )
+                ser.write(b'{"status":"1"}')
+                reading = ser.read_until(b'1')
+                print(reading)
+                if reading == b"1":
+                    print('respondeu.. porta atribuida pelo handshake.')
                     handShakePort = port
-                    testHandShake.close()
+                    ser.close()
                     connected = True
                     break
-            except:
+            except Exception as err:
+                print(err)
                 pass
+            
 
 def setModeMemory():
     global mode, prevMode, memoryActivate
