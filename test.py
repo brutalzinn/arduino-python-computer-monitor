@@ -1,8 +1,23 @@
-import serial
+from pynput import keyboard
+import threading
 from time import sleep
-ser = serial.Serial('COM6', 9600, timeout=0)
-while True:
+
+def setModeMemory():
+    print('set memory')
+def setModeGPU():
+    print('set gpu')
     
-    ser.write(b'{"status":"1"}')
-    reading = ser.read(ser.inWaiting()).decode('ascii')
-    print(reading)
+
+def activate_hotkeys(args):
+    # for item in kwargs:
+    #     print(item)
+    listener = keyboard.GlobalHotKeys(args)
+    listener.start()
+
+myKeys = {'<ctrl>+<alt>+1':setModeMemory,'<ctrl>+<alt>+3':setModeGPU}
+
+activate_hotkeys(myKeys)
+
+while True:
+    print('apenas uma passada do while')
+    sleep(1)
