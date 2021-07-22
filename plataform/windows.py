@@ -36,56 +36,62 @@ class Windows:
                 response['fps'] = item['data']
         return response
     def startConnection(self):
-        self.sock = socket.socket()
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         host = socket.gethostname()
-        self.sock.connect((host, self.PORT))
-        self.sock.setblocking(0)
+        self.sock.connect((self.HOST, self.PORT))
+     #   self.sock.setblocking(0)
+       # self.sock.timeout(1)
+        self.connected = True
 
     def handleQueue(self):
         lastMessage = self.queue[len(self.queue) - 1]
         jsonToHandle = json.loads(lastMessage)
         self.queue.pop(len(self.queue) - 1)
         return self.handleMessage(jsonToHandle['afterburner'])
+    
     def execute(self,mode):
-        machineInfo = False
-        ready = select.select([self.sock], [], [], 1)
-        if ready[0]:
+        amount_received = 0
+        #machineInfo = False
+        while amount_received < self.lenght:
             data = self.sock.recv(self.lenght).decode('utf-8')
             if data:
                 self.queue.append(data)
                 machineInfo = self.handleQueue()
-                cpuTemp = machineInfo["cpuTemp"]
-                cpuPercent = machineInfo["cpuUsage"]
-                maxMemStatus = '1'
-                memPercent = machineInfo["memUsagePercent"]
-                if memPercent > self.maxmem:
+                if machineInfo:
+                    cpuTemp = round(machineInfo["cpuTemp"])
+                    gameFps = round(machineInfo["fps"])
+                    cpuPercent = round(machineInfo["cpuUsage"])
                     maxMemStatus = '1'
-                else:
-                    maxMemStatus = '0'
-                memTotal = machineInfo["ramMax"]
-                memUsed = machineInfo["ramUsage"]
-                gpu_util = machineInfo["gpuUsage"]
-                gpu_temp =  machineInfo["gpuTemp"]
-                memInfo = f'MEM: {memPercent}% {round(memUsed,1)}GB de {round(memTotal,1)}GB'
-                gpuInfo = f'GPU: {gpu_util}% {gpu_temp}C'
-                procInfo = f'CPU: {cpuPercent}% {cpuTemp}C'
-                def scrollText(text):
-                    result = None
-                    StrProcess = "                " + text + "                "
-                    result = StrProcess[self.Lii: self.Li]
-                    self.Li = self.Li + 1
-                    self.Lii = self.Lii + 1
-                    if self.Li > len(StrProcess):
-                        self.Li = 16
-                        self.Lii = 0
-                    return result
-                writerResult = {"rowone":f"{memInfo}","rowtwo":f"{procInfo}"}
-                if mode == -1:
+                    memPercent = round(machineInfo["memUsagePercent"])
+                    if memPercent > self.maxmem:
+                        maxMemStatus = '1'
+                    else:
+                        maxMemStatus = '0'
+                    memTotal = round(machineInfo["ramMax"])
+                    memUsed = round(machineInfo["ramUsage"])
+                    gpu_util = round(machineInfo["gpuUsage"])
+                    gpu_temp =  round(machineInfo["gpuTemp"])
+                    memInfo = f'MEM:{memPercent}% {memUsed}GB de {memTotal}GB'
+                    gpuInfo = f'GPU:{gpu_util}% {gpu_temp}C {gameFps}'
+                    procInfo = f'CPU:{cpuPercent}% {cpuTemp}C'
+                    def scrollText(text):
+                        result = None
+                        StrProcess = "                " + text + "                "
+                        result = StrProcess[self.Lii: self.Li]
+                        self.Li = self.Li + 1
+                        self.Lii = self.Lii + 1
+                        if self.Li > len(StrProcess):
+                            self.Li = 16
+                            self.Lii = 0
+                        return result
                     writerResult = {"rowone":f"{memInfo}","rowtwo":f"{procInfo}"}
-                if mode == 1:
-                    writerResult = {"rowone":f"{scrollText(memInfo)}","rowtwo":f"{procInfo}"}
-                if mode == 3:
-                    writerResult = {"rowone":f"{gpuInfo}","rowtwo":f"{procInfo}"}
-                writerResult['maxmem'] = maxMemStatus
-            #  print('teste')
-            return writerResult
+                    if mode == -1:
+                        writerResult = {"rowone":f"{memInfo}","rowtwo":f"{procInfo}"}
+                    if mode == 1:
+                        writerResult = {"rowone":f"{scrollText(memInfo)}","rowtwo":f"{procInfo}"}
+                    if mode == 3:
+                        writerResult = {"rowone":f"{gpuInfo}","rowtwo":f"{procInfo}"}
+                    writerResult['maxmem'] = maxMemStatus
+                #  print('teste')
+                    return writerResult
+            amount_received += len(data)
