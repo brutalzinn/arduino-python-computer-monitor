@@ -77,6 +77,7 @@ def setModeGPU():
         gpuActivate = False
 myKeys = {memKey:setModeMemory,gpuKey:setModeGPU}
 activate_hotkeys(myKeys)
+systemType.startConnection()
 while handShakePort != None:
     if not ser.isOpen():
         ser = serial.Serial(handShakePort, 9600)
