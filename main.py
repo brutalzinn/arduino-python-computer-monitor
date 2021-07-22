@@ -82,6 +82,7 @@ while handShakePort != None:
     if not ser.isOpen():
         ser = serial.Serial(handShakePort, 9600)
     prepareWriter = systemType.execute(mode)
+    
     message = f'{prepareWriter}'
     ser.write((message).encode('ascii'))
     sleep(1)
