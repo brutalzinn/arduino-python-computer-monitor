@@ -7,8 +7,10 @@ import json
 import wmi
 import threading
 from hotkey import activate_hotkeys
-from plataform import windows, linux
+from plataform.windows import Windows
+from plataform.linux import Linux
 ports = serial.tools.list_ports.comports()
+
 handShakePort = None
 prevMode = 0
 mode = 0
@@ -21,16 +23,17 @@ systemType = False
 Li = 16
 Lii = 0
 connected = False
-if platform == "linux" or platform == "linux2":
-    systemType = linux()
-elif platform == "win32":
-    systemType = windows()
 with open("config.json") as jsonFile:
     jsonObject = json.load(jsonFile)
     jsonFile.close()
 maxMem = jsonObject['maxMem']
 memKey = jsonObject['memKey']
 gpuKey = jsonObject['gpuKey']
+if platform == "linux" or platform == "linux2":
+    systemType = Linux(maxMem)
+elif platform == "win32":
+    systemType = Windows(maxMem)
+
 ports = serial.tools.list_ports.comports(include_links=False)
 ser = serial.Serial()
 while not connected:
@@ -77,7 +80,7 @@ activate_hotkeys(myKeys)
 while handShakePort != None:
     if not ser.isOpen():
         ser = serial.Serial(handShakePort, 9600)
-    prepareWriter = systemType.execute()
+    prepareWriter = systemType.execute(mode)
     message = f'{prepareWriter}'
     ser.write((message).encode('ascii'))
     sleep(1)

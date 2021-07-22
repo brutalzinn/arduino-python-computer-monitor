@@ -1,10 +1,8 @@
 import psutil
 import GPUtil
 class Linux:
-    def __init__(self,level, maxmem, mode):
-        self.level = level
+    def __init__(self, maxmem):
         self.maxmem = maxmem
-        self.mode = mode
         self.Li = 16
         self.Lii = 0
     def execute(self):
