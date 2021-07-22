@@ -1,15 +1,13 @@
 from sys import platform
 from time import sleep
 import serial
-import psutil
-from serial.serialwin32 import Serial
 import serial.tools.list_ports
-import GPUtil
+from serial.serialwin32 import Serial
 import json
 import wmi
 import threading
-
 from hotkey import activate_hotkeys
+from plataform import windows, linux
 ports = serial.tools.list_ports.comports()
 handShakePort = None
 prevMode = 0
@@ -19,30 +17,20 @@ maxMem = 0
 memKey = ''
 gpuKey = ''
 gpuActivate = False
-systemType = 0
+systemType = False
 Li = 16
 Lii = 0
 connected = False
-def getWindowsTemps():
-    w = wmi.WMI(namespace="OpenHardwareMonitor")
-    temperature_infos = w.Sensor()
-    for sensor in temperature_infos:
-        if sensor.SensorType==u'Temperature':
-            if "CPU Package" in sensor.name:
-               return sensor.Value
 if platform == "linux" or platform == "linux2":
-    cpuTemps = psutil.sensors_temperatures()['coretemp']
-    systemType = 0
+    systemType = linux()
 elif platform == "win32":
-    systemType = 1
-
+    systemType = windows()
 with open("config.json") as jsonFile:
     jsonObject = json.load(jsonFile)
     jsonFile.close()
 maxMem = jsonObject['maxMem']
 memKey = jsonObject['memKey']
 gpuKey = jsonObject['gpuKey']
-
 ports = serial.tools.list_ports.comports(include_links=False)
 ser = serial.Serial()
 while not connected:
@@ -65,10 +53,7 @@ while not connected:
             except IOError as err:
                 print(err)
                 ser.close()
-
                 pass
-            
-
 def setModeMemory():
     global mode, prevMode, memoryActivate
     if not memoryActivate:
@@ -87,63 +72,12 @@ def setModeGPU():
     else:
         mode = -3
         gpuActivate = False
-        
 myKeys = {memKey:setModeMemory,gpuKey:setModeGPU}
 activate_hotkeys(myKeys)
-
 while handShakePort != None:
-    mem = psutil.virtual_memory()
-    cpuPercent = psutil.cpu_percent()
-    maxMemStatus = '1'
-    memPercent = mem.percent
-    if memPercent > maxMem:
-        maxMemStatus = '1'
-    else:
-        maxMemStatus = '0'
-    memTotal = mem.total /1024/1024/1024
-    if hasattr(mem, 'active'):
-        memUsed = mem.active /1024/1024/1024
-    else:
-        memUsed = mem.used /1024/1024/1024
-    gpu = GPUtil.getGPUs()[0]
-    gpu_util = int(gpu.load * 100)
-    gpu_temp = int(gpu.temperature)
-    cpuTemp = 0
-    if systemType == 0:
-        for item in cpuTemps:
-            if 'Package' in item.label:
-                cpuTemp = item.current
-    else:
-        cpuTemp = getWindowsTemps()
-    memInfo = f'MEM: {memPercent}% {round(memUsed,1)}GB de {round(memTotal,1)}GB'
-    gpuInfo = f'GPU: {gpu_util}% {gpu_temp} C    '
-    procInfo = f'CPU: {cpuPercent}% {cpuTemp} C GPU: {gpu_util}% {gpu_temp} C'
-    def modeWriter():
-        global mode
-        def scrollText(text):
-            global Li, Lii
-            result = None
-            StrProcess = "                " + text + "                "
-            result = StrProcess[Lii: Li]
-            Li = Li + 1
-            Lii = Lii + 1
-            if Li > len(StrProcess):
-                Li = 16
-                Lii = 0
-            return result
-        writerResult = {"rowone":f"{memInfo}","rowtwo":f"{procInfo}"}
-        if mode == -1:
-            writerResult = {"rowone":f"{memInfo}","rowtwo":f"{procInfo}"}
-        if mode == 1:
-            writerResult = {"rowone":f"{scrollText(memInfo)}","rowtwo":f"{procInfo}"}
-        if mode == 3:
-            writerResult = {"rowone":f"{gpuInfo}","rowtwo":f"{procInfo}"}
-        return writerResult
-    #print('startig at port',handShakePort)
     if not ser.isOpen():
         ser = serial.Serial(handShakePort, 9600)
-    prepareWriter = modeWriter()
-    prepareWriter['maxmem'] = maxMemStatus
+    prepareWriter = systemType.execute()
     message = f'{prepareWriter}'
     ser.write((message).encode('ascii'))
     sleep(1)
