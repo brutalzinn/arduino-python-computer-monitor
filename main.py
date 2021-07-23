@@ -85,5 +85,5 @@ while handShakePort != None:
     
     message = f'{prepareWriter}'
     ser.write((message).encode('ascii'))
-    sleep(3)
+    sleep(0.5)
 

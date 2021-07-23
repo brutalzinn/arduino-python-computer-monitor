@@ -2,6 +2,8 @@ from time import sleep
 import json
 import select
 import socket
+import struct
+
 from mySocket import JsonClient, JsonSocket
 class Windows:
     def __init__(self, maxmem):
@@ -10,7 +12,7 @@ class Windows:
         self.Lii = 0
         self.HOST = '127.0.0.1'
         self.PORT = 60000       
-        self.lenght = 1024 * 1024
+        self.lenght = 1024 * 1024 #1024 * 1024
         self.queue = []
         self.connected = False
         
@@ -39,7 +41,7 @@ class Windows:
         self.sock = socket.socket()
         # host = socket.gethostname()
         self.sock.connect((self.HOST, self.PORT))
-        self.sock.send('1'.encode('utf-8'))
+        self.sock.send(('1').encode())
         # self.sock = JsonClient(self.HOST,self.PORT)
         # #self.sock.timeout = 3
         # self.sock.connect()
@@ -48,18 +50,55 @@ class Windows:
        # self.sock.setblocking(False)
      #   self.sock.setblocking(0)
        # self.sock.timeout(1)
+       
+    def read_blob(self, size):
+        ret = self.sock.recv(size)
+        return ret
 
+    def read_long(self):
+        size = struct.calcsize("L")
+        data = self.read_blob(size)
+        return struct.unpack("L", data)
+    
     def handleQueue(self):
         lastMessage = self.queue[len(self.queue) - 1]
         self.queue.pop(len(self.queue) - 1)
         return self.handleMessage(lastMessage['afterburner'])
+    # def recvall3(self,sock, size):
+    #     result = b''
+    #     remaining = size
+    #     while remaining > 0:
+    #         data = sock.recv(remaining)
+    #         result += data
+    #         remaining -= len(data)
+    #     return result
     
+    # def recvall(self,sock, n):
+    # # Helper function to recv n bytes or return None if EOF is hit
+    #     data = bytearray()
+    #     while len(data) < n:
+    #         packet = sock.recv(n - len(data))
+    #         if not packet:
+    #             return None
+    #         data.extend(packet)
+    #     return data
+    def recvallteste(self):
+        data = b''
+        bufsize = self.lenght
+        while True:
+            packet = self.sock.recv(bufsize).decode('utf-8')
+            try:
+                data = json.loads(packet)
+                return data
+            except json.decoder.JSONDecodeError:
+                pass
+        
     def execute(self,mode):
         machineInfo = False
-        jsondata = self.sock.read_obj()
-        print(jsondata)
-        self.queue.append(jsondata)
-        return 
+        #self.message = ''
+        jsn_encode = False
+        self.message = self.recvallteste()
+        self.queue.append(self.message)   
         machineInfo = self.handleQueue()
         if machineInfo:
             cpuTemp = round(machineInfo["cpuTemp"])
@@ -97,5 +136,5 @@ class Windows:
                 writerResult = {"rowone":f"{gpuInfo}","rowtwo":f"{procInfo}"}
             writerResult['maxmem'] = maxMemStatus
         #  print('teste')
-            
-        return writerResult
+            self.message = None
+            return writerResult
