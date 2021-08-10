@@ -92,7 +92,10 @@ class Windows:
                 return data
             except json.decoder.JSONDecodeError:
                 pass
-        
+    def conv_MB_to_GB(self,input_megabyte):
+        gigabyte = 1.0/1024
+        convert_gb = gigabyte * input_megabyte
+        return convert_gb
     def execute(self,mode):
         machineInfo = False
         #self.message = ''
@@ -111,12 +114,12 @@ class Windows:
             else:
                 maxMemStatus = '0'
             memTotal = round(machineInfo["ramMax"])
-            memUsed = round(machineInfo["ramUsage"])
+            memUsed = round(self.conv_MB_to_GB(machineInfo["ramUsage"]),1)
             gpu_util = round(machineInfo["gpuUsage"])
             gpu_temp =  round(machineInfo["gpuTemp"])
-            memInfo = f'MEM:{memPercent}% {memUsed}GB de {memTotal}GB'
-            gpuInfo = f'GPU:{gpu_util}% {gpu_temp}C {gameFps}'
-            procInfo = f'CPU:{cpuPercent}% {cpuTemp}C'
+            memInfo = f'MEM:{memPercent}% {memUsed}GB de {memTotal}GB' + '                '
+            gpuInfo = f'GPU:{gpu_util}% {gpu_temp}C {gameFps}' + '                '
+            procInfo = f'CPU:{cpuPercent}% {cpuTemp}C' + '                '
             def scrollText(text):
                 result = None
                 StrProcess = "                " + text + "                "
