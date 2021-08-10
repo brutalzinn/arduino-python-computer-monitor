@@ -113,11 +113,11 @@ class Windows:
                 maxMemStatus = '1'
             else:
                 maxMemStatus = '0'
-            memTotal = round(machineInfo["ramMax"])
-            memUsed = round(self.conv_MB_to_GB(machineInfo["ramUsage"]),1)
+            memTotal = round(self.conv_MB_to_GB(machineInfo["ramMax"]), 1)
+            memUsed = round(self.conv_MB_to_GB(machineInfo["ramUsage"]), 1)
             gpu_util = round(machineInfo["gpuUsage"])
             gpu_temp =  round(machineInfo["gpuTemp"])
-            memInfo = f'MEM:{memPercent}% {memUsed}GB de {memTotal}GB' + '                '
+            memInfo = f'MEM:{memPercent}% {memUsed}GB {memTotal}GB' + '                '
             gpuInfo = f'GPU:{gpu_util}% {gpu_temp}C {gameFps}' + '                '
             procInfo = f'CPU:{cpuPercent}% {cpuTemp}C' + '                '
             def scrollText(text):
